@@ -84,18 +84,12 @@
     loadAds();
   }
 
-  function ctaHref(url, slug) {
-    if (!url) return "#";
-    return url + (url.indexOf("?") < 0 ? "?" : "&") + "utm_source=quiz&utm_content=" + encodeURIComponent(slug);
-  }
-
   function resultPage() {
     var answers = parseAnswers(params.get("a") || "");
     if (!answers || answers.length !== TOTAL) return location.replace("../");
 
     var top = window.QUIZ_RESULT(answers), p = D.provinces[top.id];
     var shareUrl = C.SITE_URL + "/p/" + p.slug + "/";
-    var ebook = (C.EBOOK_URLS || {})[top.id];
     var shareText = "Je suis fait(e) pour " + p.art + " 🇨🇦 Et vous ? Faites le quiz :";
     document.title = "Vous êtes fait(e) pour " + p.art + " !";
     setPhoto(p.img);
@@ -117,12 +111,8 @@
         p.facts.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
       '<div class="immig"><h2>Côté immigration</h2><p>' + esc(p.immig) + "</p>" +
         (top.id === "qc" ? "" : "<p>Partout hors Québec, les francophones profitent des tirages Entrée express réservés au français et du permis Mobilité francophone (sans EIMT).</p>") +
-        "<p>Les programmes changent souvent : faites vérifier votre situation.</p></div>" +
-      '<div class="ctas">' +
-        '<a class="btn btn-red" data-cta="booking" href="' + esc(ctaHref(C.BOOKING_URL, p.slug)) + '"><span class="ico">📅</span><span class="txt">Prendre rendez-vous<small>Consultation en immigration canadienne (60 min)</small></span><span class="arrow">→</span></a>' +
-        '<a class="btn btn-ink" data-cta="audit" href="' + esc(ctaHref(C.AUDIT_URL, p.slug)) + '"><span class="ico">🔎</span><span class="txt">Faire auditer mon dossier<small>Analyse complète de mon admissibilité</small></span><span class="arrow">→</span></a>' +
-        (ebook ? '<a class="btn btn-line" data-cta="ebook" href="' + esc(ctaHref(ebook, p.slug)) + '"><span class="ico">📘</span><span class="txt">Obtenir le guide ' + esc(p.name) + '<small>Tout pour immigrer ' + esc(p.to) + '</small></span><span class="arrow">→</span></a>' : "") +
-      "</div>" +
+        '<p>Les programmes changent souvent : vérifiez votre situation sur le site officiel ' +
+        '<a href="https://www.canada.ca/fr/immigration-refugies-citoyennete.html" target="_blank" rel="noopener">d\'Immigration Canada (IRCC)</a>.</p></div>' +
       '<div class="section"><h2>Vos autres coups de cœur</h2><div class="others">' + others + "</div></div>" +
       '<div class="section"><h2>Partagez votre résultat</h2><div class="share">' +
         '<a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener">' + ICONS.fb + "Facebook</a>" +
@@ -142,10 +132,6 @@
       } else if (navigator.clipboard) {
         navigator.clipboard.writeText(shareUrl).then(function () { label.textContent = "Lien copié !"; });
       }
-    });
-    // Placeholder links (not configured yet) do nothing.
-    document.querySelectorAll("[data-cta]").forEach(function (a) {
-      if (a.getAttribute("href") === "#") a.addEventListener("click", function (e) { e.preventDefault(); });
     });
     leaves();
   }
