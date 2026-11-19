@@ -50,6 +50,8 @@ function page({ base, title, desc, url, image, body, page = "home" }) {
 <main class="app">
 ${body}
 </main>
+<script src="${base}js/config.js"></script>
+<script src="${base}js/track.js"></script>
 </body>
 </html>
 `;
@@ -67,10 +69,11 @@ function landing({ base, image, kicker, heading }) {
     <div class="chips"><span class="chip">⏱ 3 minutes</span><span class="chip">20 questions</span><span class="chip">🇨🇦 13 régions</span></div>
   </section>
   <div class="start">
-    <a class="btn btn-red pulse" href="${base}question/?q=1&amp;a=">Commencer le quiz →</a>
+    <a class="btn btn-red pulse" data-track="quiz_start" href="${base}question/?q=1&amp;a=">Commencer le quiz →</a>
     <p class="note">Gratuit, sans inscription. Résultat immédiat.</p>
   </div>
-  <div class="provinces">${provinceChips}</div>`;
+  <div class="provinces">${provinceChips}</div>
+  <p class="credits-link legal"><a href="https://kallistesoft.ca/confidentialite/">Confidentialité</a></p>`;
 }
 
 // Landing page
@@ -115,7 +118,7 @@ write("credits/index.html", page({
 // visitor could mix a new quiz.js with an old score.js and get a blank page.
 // Every css/js link gets ?v=<content hash>, so a page always loads one
 // consistent set of files.
-const version = Object.fromEntries(["css/style.css", "js/config.js", "js/data.js", "js/score.js", "js/quiz.js"]
+const version = Object.fromEntries(["css/style.css", "js/config.js", "js/track.js", "js/data.js", "js/score.js", "js/quiz.js"]
   .map((f) => [f, createHash("sha1").update(read(f)).digest("hex").slice(0, 8)]));
 const pages = ["index.html", "question/index.html", "resultat/index.html", "credits/index.html",
   ...Object.values(D.provinces).map((p) => `p/${p.slug}/index.html`)];

@@ -22,6 +22,11 @@
     return out;
   }
 
+  // Anonymous stats (js/track.js); a missing track.js must not break the page.
+  function track(name, p) {
+    try { if (window.track) window.track(name, p); } catch (e) {}
+  }
+
   function setPhoto(name) {
     document.documentElement.style.setProperty("--photo", "url(../img/" + name + ".jpg)");
   }
@@ -46,7 +51,8 @@
     var prev = parseAnswers(params.get("a") || "");
     if (!(n >= 1 && n <= TOTAL) || !prev || prev.length !== n - 1) return location.replace("../");
 
-    var q = D.questions[n - 1], before = params.get("a") || "";
+    var q = D.questions[n - 1], before = params.get("a") || "", shown = Date.now();
+    track("step_view", { step: n });
     document.title = "Question " + n + "/" + TOTAL + " · Quelle province est faite pour vous ?";
     setPhoto(q.img);
     $(".count").innerHTML = "Question <b>" + n + "</b>/" + TOTAL;
@@ -62,6 +68,7 @@
     var back = $(".back");
     back.href = n > 1 ? "?q=" + (n - 1) + "&a=" + before.slice(0, -1) : "../";
     back.textContent = n > 1 ? "← Question précédente" : "← Accueil";
+    back.addEventListener("click", function () { track("step_back", { step: n }); });
 
     var busy = false;
     $(".answers").addEventListener("click", function (e) {
@@ -69,6 +76,7 @@
       if (!btn || busy) return;
       busy = true;
       btn.classList.add("picked");
+      track("step_answer", { step: n, answer: Number(btn.dataset.i), ms: Math.round(Date.now() - shown) });
       var a = before + btn.dataset.i;
       var next = n < TOTAL ? "?q=" + (n + 1) + "&a=" + a : "../resultat/?a=" + a;
       setTimeout(function () { location.href = next; }, 180);
@@ -84,18 +92,12 @@
     loadAds();
   }
 
-  function ctaHref(url, slug) {
-    if (!url) return "#";
-    return url + (url.indexOf("?") < 0 ? "?" : "&") + "utm_source=quiz&utm_content=" + encodeURIComponent(slug);
-  }
-
   function resultPage() {
     var answers = parseAnswers(params.get("a") || "");
     if (!answers || answers.length !== TOTAL) return location.replace("../");
 
     var top = window.QUIZ_RESULT(answers), p = D.provinces[top.id];
     var shareUrl = C.SITE_URL + "/p/" + p.slug + "/";
-    var ebook = (C.EBOOK_URLS || {})[top.id];
     var shareText = "Je suis fait(e) pour " + p.art + " 🇨🇦 Et vous ? Faites le quiz :";
     document.title = "Vous êtes fait(e) pour " + p.art + " !";
     setPhoto(p.img);
@@ -117,36 +119,35 @@
         p.facts.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("") + "</ul></div>" +
       '<div class="immig"><h2>Côté immigration</h2><p>' + esc(p.immig) + "</p>" +
         (top.id === "qc" ? "" : "<p>Partout hors Québec, les francophones profitent des tirages Entrée express réservés au français et du permis Mobilité francophone (sans EIMT).</p>") +
-        "<p>Les programmes changent souvent : faites vérifier votre situation.</p></div>" +
-      '<div class="ctas">' +
-        '<a class="btn btn-red" data-cta="booking" href="' + esc(ctaHref(C.BOOKING_URL, p.slug)) + '"><span class="ico">📅</span><span class="txt">Prendre rendez-vous<small>Consultation en immigration canadienne (60 min)</small></span><span class="arrow">→</span></a>' +
-        '<a class="btn btn-ink" data-cta="audit" href="' + esc(ctaHref(C.AUDIT_URL, p.slug)) + '"><span class="ico">🔎</span><span class="txt">Faire auditer mon dossier<small>Analyse complète de mon admissibilité</small></span><span class="arrow">→</span></a>' +
-        (ebook ? '<a class="btn btn-line" data-cta="ebook" href="' + esc(ctaHref(ebook, p.slug)) + '"><span class="ico">📘</span><span class="txt">Obtenir le guide ' + esc(p.name) + '<small>Tout pour immigrer ' + esc(p.to) + '</small></span><span class="arrow">→</span></a>' : "") +
-      "</div>" +
+        '<p>Les programmes changent souvent : vérifiez votre situation sur le site officiel ' +
+        '<a href="https://www.canada.ca/fr/immigration-refugies-citoyennete.html" target="_blank" rel="noopener">d\'Immigration Canada (IRCC)</a>.</p></div>' +
       '<div class="section"><h2>Vos autres coups de cœur</h2><div class="others">' + others + "</div></div>" +
       '<div class="section"><h2>Partagez votre résultat</h2><div class="share">' +
-        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener">' + ICONS.fb + "Facebook</a>" +
-        '<a href="https://wa.me/?text=' + encodeURIComponent(shareText + " " + shareUrl) + '" target="_blank" rel="noopener">' + ICONS.wa + "WhatsApp</a>" +
+        '<a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '" target="_blank" rel="noopener" data-share="facebook">' + ICONS.fb + "Facebook</a>" +
+        '<a href="https://wa.me/?text=' + encodeURIComponent(shareText + " " + shareUrl) + '" target="_blank" rel="noopener" data-share="whatsapp">' + ICONS.wa + "WhatsApp</a>" +
         '<button type="button" class="share-more">' + ICONS.link + "<span>" + (navigator.share ? "Partager" : "Copier le lien") + "</span></button>" +
       "</div></div>" +
       '<div class="footer">' +
-        '<a class="btn btn-line" href="../question/?q=1&amp;a=">↻ Refaire le quiz</a>' +
+        '<a class="btn btn-line restart" href="../question/?q=1&amp;a=">↻ Refaire le quiz</a>' +
         '<p class="note">Résultat indicatif, à titre de divertissement. Ne constitue pas un avis juridique.</p>' +
-        '<a class="credits-link" href="../credits/">Crédits photos</a>' +
+        '<p class="credits-link"><a href="../credits/">Crédits photos</a> · <a href="https://kallistesoft.ca/confidentialite/">Confidentialité</a></p>' +
       "</div>";
 
     $(".share-more").addEventListener("click", function () {
       var label = this.querySelector("span");
       if (navigator.share) {
+        track("share", { method: "native", result: p.slug });
         navigator.share({ title: document.title, text: shareText, url: shareUrl }).catch(function () {});
       } else if (navigator.clipboard) {
+        track("share", { method: "copy", result: p.slug });
         navigator.clipboard.writeText(shareUrl).then(function () { label.textContent = "Lien copié !"; });
       }
     });
-    // Placeholder links (not configured yet) do nothing.
-    document.querySelectorAll("[data-cta]").forEach(function (a) {
-      if (a.getAttribute("href") === "#") a.addEventListener("click", function (e) { e.preventDefault(); });
+    document.querySelectorAll("[data-share]").forEach(function (a) {
+      a.addEventListener("click", function () { track("share", { method: a.dataset.share, result: p.slug }); });
     });
+    $(".restart").addEventListener("click", function () { track("quiz_restart", { result: p.slug }); });
+    track("result_view", { result: p.slug, pct: top.pct });
     leaves();
   }
 
