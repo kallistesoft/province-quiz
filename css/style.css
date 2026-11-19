@@ -210,7 +210,8 @@ button { font: inherit; color: inherit; }
 .share svg { width: 22px; height: 22px; }
 .footer { padding: 24px 20px 30px; display: grid; gap: 12px; }
 .footer a.btn { font-size: 1rem; padding: 14px; }
-.credits-link { text-align: center; font-size: .78rem; color: var(--muted); }
+.credits-link { text-align: center; font-size: .78rem; color: var(--muted); margin: 0; }
+.legal { padding: 0 20px 24px; }
 
 /* Falling maple leaves on the result page */
 .leaf { position: fixed; top: -40px; z-index: 50; pointer-events: none; animation: fall linear forwards; }

@@ -13,6 +13,7 @@ Test URL: https://quiz.kallistesoft.ca (`noindex` and `robots.txt` block search 
 - `js/config.js`: site URL and AdSense IDs.
 - `js/data.js`: provinces, questions and answer weights. Optional `resultMap` (`{ from: to }`) would show one province's winners as another; none is set, so every region can win as itself.
 - `js/score.js`: scoring.
+- `js/track.js`: anonymous stats. `track(name, params)` sends one event to `STATS_URL` (sendBeacon, no cookies or IDs); with `GA_ID` set it also loads Google Analytics with consent denied by default.
 - `img/`: Wikimedia Commons photos (licences in `img/credits.json`, shown on `/credits/`).
 
 ## Checks

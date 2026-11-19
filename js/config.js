@@ -4,6 +4,11 @@ window.QUIZ_CONFIG = {
   // and by tools/build_pages.mjs (run it again after changing this).
   SITE_URL: "https://quiz.kallistesoft.ca",
 
+  // Anonymous stats endpoint (js/track.js). Empty = send nothing.
+  STATS_URL: "https://kallistesoft.ca/hit.php",
+  // Google Analytics measurement id, e.g. "G-XXXXXXXXXX". Empty = GA off.
+  GA_ID: "",
+
   // Google AdSense. Leave empty to hide the ad slots.
   // A cookie-consent banner (Google-certified CMP) is required before going live for EU visitors.
   ADSENSE_CLIENT: "", // e.g. "ca-pub-1234567890123456"
